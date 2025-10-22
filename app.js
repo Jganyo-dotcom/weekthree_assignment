@@ -12,12 +12,35 @@ app.get('/todos', (req, res) => {
   res.status(200).json(todos); // Send array as JSON
 });
 
+// GET Single to do 
+app.use("/todo/:id", (req,res)=>{
+  console.log("Hi")
+    id = parseInt(req.params.id)
+    console.log(id)
+    results = todos.find((t)=> t.id === id)
+    if(!results) return res.status(404).send(`Todo with id ${id} not Found`)
+    res.status(200).json(results)
+})
+
 // POST New – Create
 app.post('/todos', (req, res) => {
+  if (req.body.task && typeof req.body.completed === 'boolean'){
   const newTodo = { id: todos.length + 1, ...req.body }; // Auto-ID
   todos.push(newTodo);
-  res.status(201).json(newTodo); // Echo back
+   res.status(201).json(newTodo); // Echo back
+  }
+
+  else{
+    return res.status(400).send("Fill out all spaces")
+  }
+ 
 });
+
+//filter completed
+app.get("/todos/active", (req,res)=>{
+  const active = todos.filter((t)=> t.completed === false)
+  res.status(200).json(active)
+})
 
 // PATCH Update – Partial
 app.patch('/todos/:id', (req, res) => {
