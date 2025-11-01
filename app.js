@@ -17,7 +17,6 @@ app.get('/todos', (req, res) => {
 
 // GET Single to do 
 app.get("/todo/:id", (req,res)=>{
-
     id = parseInt(req.params.id)
     console.log(id)
     results = todos.find((t)=> t.id === id)
