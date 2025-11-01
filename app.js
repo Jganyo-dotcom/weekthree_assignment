@@ -13,7 +13,7 @@ app.get('/todos', (req, res) => {
 });
 
 // GET Single to do 
-app.use("/todo/:id", (req,res)=>{
+app.get("/todo/:id", (req,res)=>{
   console.log("Hi")
     id = parseInt(req.params.id)
     console.log(id)
