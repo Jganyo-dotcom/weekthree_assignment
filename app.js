@@ -1,3 +1,5 @@
+require("dotenv").config()
+
 const express = require('express');
 const app = express();
 app.use(express.json()); // Parse JSON bodies
@@ -7,14 +9,15 @@ let todos = [
   { id: 2, task: 'Build CRUD API', completed: false },
 ];
 
+
 // GET All – Read
 app.get('/todos', (req, res) => {
   res.status(200).json(todos); // Send array as JSON
 });
 
 // GET Single to do 
-app.use("/todo/:id", (req,res)=>{
-  console.log("Hi")
+app.get("/todo/:id", (req,res)=>{
+
     id = parseInt(req.params.id)
     console.log(id)
     results = todos.find((t)=> t.id === id)
@@ -69,5 +72,5 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Server error!' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server on port ${PORT}`));
