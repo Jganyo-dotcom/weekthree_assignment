@@ -1,8 +1,14 @@
 require("dotenv").config()
-
+const validator =require("./validationSchema/valdateBody")
+const validatePatch = require("./validationSchema/validatePatch")
+const errorHandler = require("./error.js")
+const loggerMiddleware = require("./middlewares/logger.js")
 const express = require('express');
 const app = express();
+
+
 app.use(express.json()); // Parse JSON bodies
+app.use(loggerMiddleware)
 
 let todos = [
   { id: 1, task: 'Learn Node.js', completed: false },
@@ -16,17 +22,25 @@ app.get('/todos', (req, res) => {
 });
 
 // GET Single to do 
-app.get("/todo/:id", (req,res)=>{
+app.get("/todo/:id", (req,res,next)=>{
+   try{
     id = parseInt(req.params.id)
+    if(isNaN(id)) throw new Error("invalid id")
     console.log(id)
     results = todos.find((t)=> t.id === id)
     if(!results) return res.status(404).send(`Todo with id ${id} not Found`)
     res.status(200).json(results)
+
+   } catch(error){
+    next(error)
+   }
 })
 
 // POST New – Create
-app.post('/todos', (req, res) => {
-  if (req.body.task && typeof req.body.completed === 'boolean'){
+app.post('/todos', validator, (req, res, next) => {
+  try {
+
+      if (req.body.task && typeof req.body.completed === 'boolean'){
   const newTodo = { id: todos.length + 1, ...req.body }; // Auto-ID
   todos.push(newTodo);
    res.status(201).json(newTodo); // Echo back
@@ -35,6 +49,11 @@ app.post('/todos', (req, res) => {
   else{
     return res.status(400).send("Fill out all spaces")
   }
+
+  }catch(error){
+    next(error)
+  }
+
  
 });
 
@@ -45,21 +64,32 @@ app.get("/todos/active", (req,res)=>{
 })
 
 // PATCH Update – Partial
-app.patch('/todos/:id', (req, res) => {
-  const todo = todos.find((t) => t.id === parseInt(req.params.id)); // Array.find()
-  if (!todo) return res.status(404).json({ message: 'Todo not found' });
-  Object.assign(todo, req.body); // Merge: e.g., {completed: true}
-  res.status(200).json(todo);
+app.patch('/todos/:id',validatePatch,(req, res,next) => {
+  try{
+          const todo = todos.find((t) => t.id === parseInt(req.params.id)); // Array.find()
+          if (!todo) return res.status(404).json({ message: 'Todo not found' });
+          Object.assign(todo, req.body); // Merge: e.g., {completed: true}
+          res.status(200).json(todo);
+  }catch(error){
+    next(error)
+  }
+
 });
 
 // DELETE Remove
-app.delete('/todos/:id', (req, res) => {
-  const id = parseInt(req.params.id);
+app.delete('/todos/:id', (req, res,next) => {
+  try{
+        const id = parseInt(req.params.id);
   const initialLength = todos.length;
   todos = todos.filter((t) => t.id !== id); // Array.filter() – non-destructive
   if (todos.length === initialLength)
     return res.status(404).json({ error: 'Not found' });
   res.status(204).send(); // Silent success
+
+  }catch(error){
+    next(error)
+  }
+  
 });
 
 app.get('/todos/completed', (req, res) => {
@@ -67,9 +97,7 @@ app.get('/todos/completed', (req, res) => {
   res.json(completed); // Custom Read!
 });
 
-app.use((err, req, res, next) => {
-  res.status(500).json({ error: 'Server error!' });
-});
+app.use(errorHandler)
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server on port ${PORT}`));
